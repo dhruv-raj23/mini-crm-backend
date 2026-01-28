@@ -1,0 +1,34 @@
+# version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: mini_crm_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mini_crm
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    container_name: mini_crm_api
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/mini_crm
+      JWT_SECRET: docker_secret
+      JWT_EXPIRES_IN: 1d
+      PORT: 5000
+    command: sh -c "npx prisma generate && npx prisma migrate dev --name init && npm run dev"
+
+
+volumes:
+  postgres_data:
